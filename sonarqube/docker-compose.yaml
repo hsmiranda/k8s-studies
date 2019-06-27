@@ -1,0 +1,14 @@
+version: '3'
+services:
+  sonar:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sonarqube-custom/latest
+    ports:
+      - "9090:9000"
+    environment:
+      sonar.jdbc.password: dn04N894M
+      sonar.jdbc.url: jdbc:sqlserver://sqlprd2:1433;DatabaseName=SonarQube
+      sonar.jdbc.username: iusr_sonarqube
+

@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarqube
+  namespace: build
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarqube
+      sgdb: mssql
+  template:
+    metadata:
+      labels:
+        app: sonarqube
+        sgdb: mssql
+        ambiente: producao
+    spec:
+      containers:
+        - name: sonarqubemssql
+          image: localhost:5000/sonarqube:last
+          ports:
+          - containerPort: 3000
