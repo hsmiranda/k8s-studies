@@ -1,11 +1,7 @@
 FROM openjdk:8
 
-ENV SONAR_VERSION=7.7 \
+ENV SONAR_VERSION=7.8 \
     SONARQUBE_HOME=/opt/sonarqube \
-    # Database configuration
-    # Defaults to using H2
-    # DEPRECATED. Use -v sonar.jdbc.username=... instead
-    # Drop these in the next release, also in the run script
     SONARQUBE_JDBC_USERNAME=iusr_sonarqube \
     SONARQUBE_JDBC_PASSWORD=dn04N894M \
     SONARQUBE_JDBC_URL=jdbc:sqlserver://10.1.20.203:1433;DatabaseName=SonarQube
@@ -42,7 +38,7 @@ RUN set -x \
     && mv sonarqube-$SONAR_VERSION sonarqube \
     && chown -R sonarqube:sonarqube sonarqube \
     && rm sonarqube.zip* \
-    && rm -rf $SONARQUBE_HOME/bin/*
+    && rm -rf $SONARQUBE_HOME/bin/* \
 
 VOLUME "$SONARQUBE_HOME/data"
 
