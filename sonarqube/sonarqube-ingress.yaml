@@ -5,6 +5,7 @@ metadata:
   namespace: build
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: \"false\"
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
   - http:
@@ -12,4 +13,4 @@ spec:
       - path: /sonarqube
         backend:
           serviceName: sonarqube-svc
-          servicePort: 80
+          servicePort: 443

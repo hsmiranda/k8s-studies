@@ -3,21 +3,24 @@ kind: Deployment
 metadata:
   name: sonarqube
   namespace: build
+  labels:
+    app: sonarqube-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sonarqube
-      sgdb: mssql
+      app: sonarqube-app
   template:
     metadata:
       labels:
-        app: sonarqube
-        sgdb: mssql
-        ambiente: producao
+        app: sonarqube-app
     spec:
       containers:
         - name: sonarqubemssql
-          image: localhost:5000/sonarqube:last
+          image: sonarqube:7.7
           ports:
-          - containerPort: 3000
+            - containerPort: 9000
+          resources:
+            limits:
+              memory: "2Gi"
+

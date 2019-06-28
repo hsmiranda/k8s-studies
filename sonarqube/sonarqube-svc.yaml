@@ -4,10 +4,10 @@ metadata:
   name: sonarqube-svc
   namespace: build
 spec:
-  ports:
-  - port: 80
-    targetPort: 3000
-    protocol: TCP
-    name: http
   selector:
-    app: sonarqube
+    app: sonarqube-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 9000
+    protocol: TCP
