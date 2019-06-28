@@ -17,10 +17,9 @@ spec:
     spec:
       containers:
         - name: sonarqubemssql
-          image: sonarqube:7.7
+          image: sonarqube:latest
           ports:
             - containerPort: 9000
           resources:
             limits:
               memory: "2Gi"
-
