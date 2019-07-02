@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: sonarqube-custom-template
+metadata:
+  name: sonarqube 7.8
+  annotations:
+    description: Sonaqube 7.8
+    tags: ci,sonarqube
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}
+  spec:
+    tags:
+    - from:
+        kind: DockerImage
+        name: docker.io/library/sonarqube:${SONARQUBE_VERSION}
+      name: ${SONARQUBE_VERSION}
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}
+  spec:
+    replicas: 1
+    selector:
+      deploymentconfig: ${SERVICE_NAME}
+    strategy:
+      recreateParams:
+        timeoutSeconds: 1200
+        post:
+          failurePolicy: Abort
+          execNewPod:
+            containerName: ${SERVICE_NAME}
+            command:
+              - "/bin/bash"
+              - "-c"
+              - "java -jar lib/sonar-application-$SONAR_VERSION.jar -Dsonar.log.console=true -Dsonar.jdbc.username=${SONARQUBE_JDBC_USERNAME} -Dsonar.jdbc.password=${SONARQUBE_JDBC_PASSWORD} -Dsonar.jdbc.url=${SONARQUBE_JDBC_URL} -Dsonar.web.javaAdditionalOpts=${SONARQUBE_WEB_JVM_OPTS} -Djava.security.egd=file:/dev/./urandom"
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          deploymentconfig: ${SERVICE_NAME}
+      spec:
+        containers:
+        - env:
+          - name: CONTEXT_PATH
+            value: /
+          image: ' '
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - echo
+              - ok
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: ${SERVICE_NAME}
+          ports:
+          - containerPort: 9000
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: ${MAX_MEMORY}
+            requests:
+              memory: 2048Mi
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /opt/sonarqube/data
+            name: ${SERVICE_NAME}-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: ${SERVICE_NAME}-data
+          persistentVolumeClaim:
+            claimName: ${SERVICE_NAME}-pv
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${SERVICE_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${SERVICE_NAME}:${SONARQUBE_VERSION}
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}
+  spec:
+    ports:
+    - name: sonarqube-http
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
+    selector:
+      deploymentconfig: ${SERVICE_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}
+  spec:
+    port:
+      targetPort: sonarqube-http
+    to:
+      kind: Service
+      name: ${SERVICE_NAME}
+      weight: 100
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      app: ${SERVICE_NAME}
+    name: ${SERVICE_NAME}-pv
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${VOLUME_CAPACITY}
+parameters:
+- displayName: Sonaqube service name
+  name: SERVICE_NAME
+  required: true
+  value: nexus
+- displayName: Sonaqube version
+  name: SONARQUBE_VERSION
+  required: true
+  value: 7.8
+- description: Volume space available for Sonaqube e.g. 512Mi, 2Gi
+  displayName: Volume Space for Sonarqube
+  name: VOLUME_CAPACITY
+  required: true
+  value: 2Gi
+- description: Max memory allocated to the Sonarqube pod
+  displayName: Max Memory
+  name: MAX_MEMORY
+  required: true
+  value: 2Gi
