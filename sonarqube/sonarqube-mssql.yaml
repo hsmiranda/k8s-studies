@@ -23,3 +23,14 @@ spec:
           resources:
             limits:
               memory: "2Gi"
+          env:
+          - name: SONAR_VERSION
+            value: "7.9"
+          - name: SONARQUBE_HOME
+            value: "/opt/sonarqube"
+          - name: SONARQUBE_JDBC_USERNAME
+            value: "iusr_sonarqube"
+          - name: SONARQUBE_JDBC_PASSWORD
+            value: "dn04N894M"
+          - name: SONARQUBE_JDBC_URL
+            value: "jdbc:sqlserver://10.1.20.203:1433;DatabaseName=SonarQube"
