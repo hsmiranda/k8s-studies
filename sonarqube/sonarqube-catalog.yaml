@@ -1,167 +1,186 @@
-apiVersion: v1
 kind: Template
-labels:
-  template: sonarqube-custom-template
+apiVersion: v1
 metadata:
-  name: sonarqube 7.8
   annotations:
-    description: Sonaqube 7.8
-    tags: ci,sonarqube
+    description: The SonarQube OpenShift template
+    tags: instant-app,sonarqube
+  name: sonarqube
+message: "Login to SonarQube with the default admin user: admin/admin"
 objects:
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: ${SERVICE_NAME}
-    name: ${SERVICE_NAME}
-  spec:
-    tags:
-    - from:
-        kind: DockerImage
-        name: docker.io/library/sonarqube:${SONARQUBE_VERSION}
-      name: ${SONARQUBE_VERSION}
-- apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    labels:
-      app: ${SERVICE_NAME}
-    name: ${SERVICE_NAME}
-  spec:
-    replicas: 1
-    selector:
-      deploymentconfig: ${SERVICE_NAME}
-    strategy:
-      recreateParams:
-        timeoutSeconds: 1200
-        post:
-          failurePolicy: Abort
-          execNewPod:
-            containerName: ${SERVICE_NAME}
-            command:
-              - "/bin/bash"
-              - "-c"
-              - "java -jar lib/sonar-application-$SONAR_VERSION.jar -Dsonar.log.console=true -Dsonar.jdbc.username=${SONARQUBE_JDBC_USERNAME} -Dsonar.jdbc.password=${SONARQUBE_JDBC_PASSWORD} -Dsonar.jdbc.url=${SONARQUBE_JDBC_URL} -Dsonar.web.javaAdditionalOpts=${SONARQUBE_WEB_JVM_OPTS} -Djava.security.egd=file:/dev/./urandom"
-      type: Recreate
-    template:
-      metadata:
-        labels:
-          deploymentconfig: ${SERVICE_NAME}
-      spec:
-        containers:
-        - env:
-          - name: CONTEXT_PATH
-            value: /
-          image: ' '
-          imagePullPolicy: IfNotPresent
-          livenessProbe:
-            exec:
-              command:
-              - echo
-              - ok
-            failureThreshold: 3
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          name: ${SERVICE_NAME}
-          ports:
-          - containerPort: 9000
-            protocol: TCP
-          readinessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /
-              port: 9090
-              scheme: HTTP
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          resources:
-            limits:
-              memory: ${MAX_MEMORY}
-            requests:
-              memory: 2048Mi
-          terminationMessagePath: /dev/termination-log
-          volumeMounts:
-          - mountPath: /opt/sonarqube/data
-            name: ${SERVICE_NAME}-data
-        dnsPolicy: ClusterFirst
-        restartPolicy: Always
-        securityContext: {}
-        terminationGracePeriodSeconds: 30
-        volumes:
-        - name: ${SERVICE_NAME}-data
-          persistentVolumeClaim:
-            claimName: ${SERVICE_NAME}-pv
-    test: false
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - ${SERVICE_NAME}
-        from:
-          kind: ImageStreamTag
-          name: ${SERVICE_NAME}:${SONARQUBE_VERSION}
-      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:
+    name: sonarqube
     labels:
-      app: ${SERVICE_NAME}
-    name: ${SERVICE_NAME}
+      app: sonarqube
   spec:
     ports:
-    - name: sonarqube-http
+    - name: sonarqube
       port: 9000
       protocol: TCP
       targetPort: 9000
     selector:
-      deploymentconfig: ${SERVICE_NAME}
+      app: sonarqube
+      deploymentconfig: sonarqube
     sessionAffinity: None
     type: ClusterIP
 - apiVersion: v1
   kind: Route
   metadata:
+    annotations:
+      description: Route for SonarQube's http service.
+    name: sonarqube
     labels:
-      app: ${SERVICE_NAME}
-    name: ${SERVICE_NAME}
+      app: sonarqube
   spec:
-    port:
-      targetPort: sonarqube-http
     to:
       kind: Service
-      name: ${SERVICE_NAME}
-      weight: 100
+      name: sonarqube
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: sonarqube
+    name: sonarqube
+  spec:
+    tags:
+    - annotations:
+        description: The SonarQube Docker image
+        tags: sonarqube
+      from:
+        kind: DockerImage
+        name: docker-registry-default.svc:5000/build/sonarqube:${SONAR_VERSION}
+      importPolicy: {}
+      name: sonarqube
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: sonarqube
+      deploymentconfig: sonarqube
+    name: sonarqube
+  spec:
+    replicas: 1
+    selector:
+      app: sonarqube
+      deploymentconfig: sonarqube
+    strategy:
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        annotations:
+          openshift.io/container.sonarqube.image.entrypoint: '["./bin/run.sh"]'
+        creationTimestamp: null
+        labels:
+          app: sonarqube
+          deploymentconfig: sonarqube
+      spec:
+        containers:
+        - env:
+          - name: SONARQUBE_JDBC_PASSWORD
+            value: ${JDBC_PASSWORD}
+          - name: SONARQUBE_JDBC_URL
+            value: jdbc:sqlserver://${JDBC_URL}:1433;DatabaseName=${DATABASE_NAME}
+          - name: SONARQUBE_JDBC_USERNAME
+            value: ${JDBC_USERNAME}
+          - name: SONAR_VERSION
+            value: ${SONAR_VERSION}
+          - name: SONARQUBE_HOME
+            value: ${SONAR_HOME}
+          image: ' '
+          imagePullPolicy: IfNotPresent
+          name: sonarqube
+          ports:
+          - containerPort: 9000
+            protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            httpGet:
+              port: 9000
+              path: /
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            httpGet:
+              port: 9000
+              path: /
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 800m
+              memory: 1Gi
+            limits:
+              cpu: 2
+              memory: 2Gi
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /opt/sonarqube/
+            name: sonarqube-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: sonarqube-data
+          persistentVolumeClaim:
+            claimName: sonarqube-data
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - sonarqube
+        from:
+          kind: ImageStreamTag
+          name: sonarqube:${SONARQUBE_VERSION}
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    labels:
-      app: ${SERVICE_NAME}
-    name: ${SERVICE_NAME}-pv
+    name: sonarqube-data
   spec:
     accessModes:
     - ReadWriteOnce
     resources:
       requests:
-        storage: ${VOLUME_CAPACITY}
+        storage: ${SONAR_VOLUME_CAPACITY}
 parameters:
-- displayName: Sonaqube service name
-  name: SERVICE_NAME
-  required: true
-  value: nexus
-- displayName: Sonaqube version
+- displayName: SonarQube version
+  value: "7.9"
   name: SONARQUBE_VERSION
   required: true
-  value: 7.8
-- description: Volume space available for Sonaqube e.g. 512Mi, 2Gi
-  displayName: Volume Space for Sonarqube
-  name: VOLUME_CAPACITY
+- displayName: SonarQube Database Username
+  value: "user"
+  name: JDBC_USERNAME
   required: true
-  value: 2Gi
-- description: Max memory allocated to the Sonarqube pod
-  displayName: Max Memory
-  name: MAX_MEMORY
+- description: Password for SQL Server
+  displayName: SonarQube's Database Password
+  from: '[a-zA-Z0-9]{16}'
+  generate: expression
+  name: JDBC_PASSWORD
   required: true
-  value: 2Gi
+- displayName: SQL Server Address
+  value: "127.0.0.1"
+  name: JDBC_URL
+  required: true
+- displayName: SQL Server Dataase name
+  value: "SonarQube"
+  name: DATABASE_NAME
+  required: true
+- description: Volume space available for SonarQube
+  displayName: SonarQube Volume Capacity
+  name: SONAR_VOLUME_CAPACITY
+  required: true
+  value: 20Gi

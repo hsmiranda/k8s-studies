@@ -34,7 +34,7 @@ WORKDIR $SONARQUBE_HOME
 COPY run.sh $SONARQUBE_HOME/bin/
 
 RUN useradd -r sonar
-RUN /usr/bin/fix-permissions $SONARQUBE_HOME \
+RUN /usr/bin/fix-permissions $SONARQUBE_HOME \ 
     && chmod 775 $SONARQUBE_HOME/bin/run.sh
 
 USER sonar
