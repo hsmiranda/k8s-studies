@@ -1,10 +1,10 @@
 FROM openjdk:8
 
 ENV SONAR_VERSION=7.8 \
-    SONARQUBE_HOME=/opt/sonarqube \
-    SONARQUBE_JDBC_USERNAME=iusr_sonarqube \
-    SONARQUBE_JDBC_PASSWORD=dn04N894M \
-    SONARQUBE_JDBC_URL=jdbc:sqlserver://10.1.20.203:1433;DatabaseName=SonarQube
+    SONARQUBE_HOME=/opt/sonarqube 
+#    SONARQUBE_JDBC_USERNAME=iusr_sonarqube \
+#    SONARQUBE_JDBC_PASSWORD=dn04N894M \
+#    SONARQUBE_JDBC_URL=jdbc:sqlserver://10.1.20.203:1433;DatabaseName=SonarQube
 
 # Http port
 EXPOSE 9000
