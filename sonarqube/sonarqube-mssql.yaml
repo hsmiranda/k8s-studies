@@ -1,7 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sonarqube
+  name: sonarqube-app
+  namespace: build
   labels:
     app: sonarqube-app
 spec:
@@ -15,7 +16,7 @@ spec:
         app: sonarqube-app
     spec:
       containers:
-        - name: sonarqubemssql
+        - name: sonarqube
           image: sonarqube:latest
           ports:
             - containerPort: 9000
