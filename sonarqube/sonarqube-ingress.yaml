@@ -13,4 +13,4 @@ spec:
       - path: /sonarqube
         backend:
           serviceName: sonarqube-svc
-          servicePort: 443
+          servicePort: 80

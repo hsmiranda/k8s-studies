@@ -2,12 +2,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: sonarqube-svc
-  namespace: build
 spec:
   selector:
     app: sonarqube-app
   ports:
-  - name: http
+  - name: sonarqube-http
     port: 80
     targetPort: 9000
     protocol: TCP
