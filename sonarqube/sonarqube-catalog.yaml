@@ -49,7 +49,7 @@ objects:
         tags: sonarqube
       from:
         kind: DockerImage
-        name: docker-registry-default.svc:5000/build/sonarqube:${SONAR_VERSION}
+        name: docker-registry.default.svc:5000/sonar/sonarqube:${SONARQUBE_VERSION}
       importPolicy: {}
       name: sonarqube
 - apiVersion: v1
@@ -140,12 +140,12 @@ objects:
     triggers:
     - type: ConfigChange
     - imageChangeParams:
-        automatic: true
+        automatic: false
         containerNames:
           - sonarqube
         from:
           kind: ImageStreamTag
-          name: sonarqube:${SONARQUBE_VERSION}
+          name: sonarqube
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
