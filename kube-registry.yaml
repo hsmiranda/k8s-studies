@@ -44,9 +44,6 @@ spec:
       - name: image-store
         hostPath:
           path: /data/registry/
-
----
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -61,9 +58,6 @@ spec:
   - name: registry
     port: 5000
     protocol: TCP
-
----
-
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
