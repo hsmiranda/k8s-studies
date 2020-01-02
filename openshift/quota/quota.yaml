@@ -1,15 +1,11 @@
-apiVersion: 1
-kind: ResourceQuota
+apiVersion: v1
+kind: ResourceQuota 
 metadata:
   name: quota-exemplo
 spec:
   hard:
-    pods: 4
+    pods: 6
     requests.cpu: 1
     requests.memory: 1500Mi
     limits.cpu: 3
     limits.memory: 3Gi
-  scops:
-    - NotTerminating
-completionDeadlineSeconds: 3600
-
