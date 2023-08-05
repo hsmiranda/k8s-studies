@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-  name: besteffort
-spec:
-  hard:
-    pods: "1" 
-  scopes:
-  - BestEffort 
