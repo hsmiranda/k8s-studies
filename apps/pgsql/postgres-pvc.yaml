@@ -1,11 +1,11 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: postgres-pv-claim
+  name: postgres-pvc-claim
   labels:
     app: postgres
 spec:
-  storageClassName: manual
+  storageClassName: default
   accessModes:
     - ReadWriteMany
   resources:
