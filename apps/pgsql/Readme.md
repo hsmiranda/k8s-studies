@@ -15,13 +15,13 @@ kubectl get pv
 3. Apply the postgres-configmap.yaml with command so checking the status is ok.:
 ```
 kubectl apply -f postgres-configmap.yaml
-kubectl 
+kubectl get configmaps
 ``` 
 
 4. Apply the postgres-secrets.yaml with command so checking the status is ok, the password is admin:
 ```
 kubectl apply -f postgres-secrets.yaml
-kubectl 
+kubectl get secrets
 ``` 
 
 5. Apply the postgres-statefulset.yaml with command so checking the status is ok, the password is admin:
